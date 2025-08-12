@@ -1,0 +1,595 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>IQ Test — Black & White</title>
+
+<!-- Google Sans Code -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans+Code:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<style>
+  :root{
+    --bg: #000000;
+    --panel: #0b0b0b;
+    --white: #ffffff;
+    --muted: #bdbdbd;
+    --muted-2: #8f8f8f;
+    --card-border: rgba(255,255,255,0.06);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:'Google Sans Code',monospace;background:var(--bg);color:var(--white)}
+  .wrap{min-height:100%;display:flex;align-items:center;justify-content:center;padding:22px}
+  .card{
+    width:960px;
+    max-width:100%;
+    border-radius:10px;
+    padding:22px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border:1px solid var(--card-border);
+  }
+  .grid{display:grid;grid-template-columns:1fr 340px;gap:18px}
+  header h1{margin:0;font-size:28px;color:var(--white);letter-spacing:0.6px}
+  .lead{color:var(--muted);margin-top:6px;font-size:13px}
+  .start-panel{padding:14px;background:transparent;border-radius:8px}
+  label{display:block;margin-top:12px;color:var(--muted);font-size:13px}
+  input[type=number]{width:120px;padding:10px;border-radius:6px;border:1px solid var(--card-border);background:transparent;color:var(--white);font-weight:700}
+  .btn{
+    display:inline-block;margin-top:14px;padding:10px 14px;border-radius:8px;border:1px solid var(--card-border);background:transparent;color:var(--white);font-weight:700;cursor:pointer;
+  }
+  .btn:hover{background:rgba(255,255,255,0.02)}
+  .small{font-size:13px;color:var(--muted)}
+
+  /* test area */
+  .panel{padding:14px;background:transparent;border-radius:8px;min-height:320px;display:flex;flex-direction:column}
+  .progress-wrap{display:flex;gap:12px;align-items:center}
+  .progress{flex:1;height:8px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden;border:1px solid var(--card-border)}
+  .progress > i{display:block;height:100%;background:var(--white);width:0%}
+  .qmeta{min-width:140px;text-align:right;color:var(--muted);font-size:13px}
+  .question{margin-top:16px;font-size:18px;line-height:1.4;color:var(--white)}
+  .answers{margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .answer-btn{padding:12px;border-radius:8px;border:1px solid var(--card-border);background:transparent;color:var(--white);cursor:pointer;font-weight:700;text-align:left}
+  .answer-btn:hover{background:rgba(255,255,255,0.01)}
+  .timer-bar{height:8px;background:rgba(255,255,255,0.03);border-radius:6px;overflow:hidden;margin-top:10px;border:1px solid var(--card-border)}
+  .timer-fill{height:100%;background:var(--white);width:100%}
+  .timer-text{margin-top:8px;font-weight:700;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+  .controls{margin-top:auto;display:flex;gap:10px;align-items:center}
+
+  /* right side: stats and end */
+  .side-card{padding:14px;background:transparent;border-radius:8px;border-left:1px dashed rgba(255,255,255,0.03)}
+  .stat{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px dashed rgba(255,255,255,0.03)}
+  canvas{max-width:100%}
+
+  /* end controls */
+  .summary{background:transparent;padding:10px;border-radius:8px}
+  .action-row{display:flex;gap:8px;flex-wrap:wrap}
+  .ghost{background:transparent;border:1px solid var(--card-border);color:var(--muted);padding:8px 10px;border-radius:8px;cursor:pointer}
+
+  @media (max-width:980px){
+    .grid{grid-template-columns:1fr;align-items:stretch}
+    .qmeta{text-align:left}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card" role="application" aria-labelledby="app-title">
+      <div class="grid">
+        <div>
+          <header>
+            <h1 id="app-title">IQ Test</h1>
+            <div class="lead">Test your IQ. No sign-up required</div>
+          </header>
+
+          <!-- start panel -->
+          <div id="startPanel" class="start-panel" style="margin-top:12px">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div>
+                <div style="font-size:15px;font-weight:700">Ready to test your reasoning?</div>
+                <div class="small" style="margin-top:6px">Default: 13 questions • Time limits vary per question</div>
+                <div class="small" style="text-align:left">Total quiz set: <span id="totalQuestionsCount">--</span></div>
+              </div>
+             
+            </div>
+
+            <label for="numQ">Number of questions (5–200)</label>
+            <input id="numQ" type="number" min="5" max="200" value="13" aria-label="Number of questions">
+
+            <label style="margin-top:8px">Notes</label>
+            <div class="small">Answers are scored for correctness first; faster correct answers slightly increase the estimate. This IQ score is a rough estimate for entertainment purposes only.</div>
+
+            <button id="startBtn" class="btn" aria-pressed="false">Start Test</button>
+          </div>
+
+          <!-- test panel (hidden until start) -->
+          <div id="testPanel" class="panel" style="margin-top:14px;display:none" aria-live="polite">
+            <div class="progress-wrap" aria-hidden="true">
+              <div class="progress" role="progressbar" aria-valuemin="0" aria-valuemax="100"><i id="progressFill"></i></div>
+              <div class="qmeta"><span id="qnIndicator">0 / 0</span></div>
+            </div>
+
+            <div class="question" id="questionText">Question text goes here</div>
+
+            <div class="timer-bar" aria-hidden="true"><div id="timerFill" class="timer-fill"></div></div>
+            <div class="timer-text">
+              <div id="countdownText">Time: 00.0s</div>
+              <div id="timeLimitText" class="small">Limit</div>
+            </div>
+
+            <div class="answers" id="answersWrap" aria-label="Answer choices"></div>
+
+            <div class="controls">
+              <button id="skipBtn" class="ghost">Skip</button>
+              <div style="margin-left:auto" class="small">Elapsed: <span id="totalElapsed">0s</span></div>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- right side: stats and end -->
+        <aside class="side-card" aria-hidden="false">
+          <div class="stat"><div class="small">Correct</div><div id="statCorrect">0</div></div>
+          <div class="stat"><div class="small">Wrong / Skipped</div><div id="statWrong">0</div></div>
+          <div class="stat"><div class="small">Total</div><div id="statTotal">0</div></div>
+          <div class="stat"><div class="small">Avg time / q</div><div id="statAvgTime">0s</div></div>
+          <div class="stat"><div class="small">Estimated IQ</div><div id="statIQ">--</div></div>
+
+          <div style="margin-top:12px">
+            <canvas id="miniChart" width="320" height="160" aria-hidden="false"></canvas>
+          </div>
+
+          <div style="margin-top:14px" id="endControls" hidden>
+            <div class="summary">
+              <div style="font-weight:700">Summary</div>
+              <div class="small" id="summaryText">—</div>
+            </div>
+            <div class="action-row" style="margin-top:12px">
+              <button id="downloadImgBtn" class="btn">Download Image</button>
+              <button id="copyImgBtn" class="btn">Copy Image</button>
+              <button id="restartBtn" class="ghost">Restart</button>
+            </div>
+            <div class="small" style="margin-top:10px">Image shows per-question correct/wrong, totals, IQ and avg ppl iq (100).</div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+<script>
+
+// CONFIG
+const SPEED_WEIGHT = 0.8; // speed influence
+const AVG_IQ = 100;
+
+// UI refs
+const startBtn = document.getElementById('startBtn');
+const startPanel = document.getElementById('startPanel');
+const testPanel = document.getElementById('testPanel');
+const qText = document.getElementById('questionText');
+const answersWrap = document.getElementById('answersWrap');
+const qnIndicator = document.getElementById('qnIndicator');
+const progressFill = document.getElementById('progressFill');
+const timerFill = document.getElementById('timerFill');
+const countdownText = document.getElementById('countdownText');
+const timeLimitText = document.getElementById('timeLimitText');
+const skipBtn = document.getElementById('skipBtn');
+const statCorrect = document.getElementById('statCorrect');
+const statWrong = document.getElementById('statWrong');
+const statTotal = document.getElementById('statTotal');
+const statAvgTime = document.getElementById('statAvgTime');
+const statIQ = document.getElementById('statIQ');
+const miniChartCtx = document.getElementById('miniChart').getContext('2d');
+const totalQuestionsCountEl = document.getElementById('totalQuestionsCount');
+const numQInput = document.getElementById('numQ');
+
+const endControls = document.getElementById('endControls');
+const summaryText = document.getElementById('summaryText');
+const downloadImgBtn = document.getElementById('downloadImgBtn');
+const copyImgBtn = document.getElementById('copyImgBtn');
+const restartBtn = document.getElementById('restartBtn');
+
+let QUESTIONS = [];
+let pool = [];
+let state = {
+  current: 0,
+  answers: [],
+  totalStart: 0,
+  qStart: 0,
+  timerInterval: null,
+  remainingMs: 0
+};
+let chartInstance = null;
+
+// load and normalize questions
+async function loadQuestions(){
+  try{
+    const r = await fetch('questions.json');
+    const raw = await r.json();
+    // normalize each question object to have: q, choices, answerIndex (Number), timeLimitSec
+    QUESTIONS = raw.map((it, idx) => {
+      const qText = it.q ?? it.question ?? it.text ?? (`Question ${idx+1}`);
+      const choices = it.choices ?? it.options ?? it.answers ?? [];
+      const answerIndex = (it.answerIndex ?? it.answer ?? it.correctIndex ?? 0);
+      const timeLimitSec = (it.timeLimitSec ?? it.timeLimit ?? it.limit ?? 20);
+      return {
+        q: String(qText),
+        choices: Array.isArray(choices) ? choices.slice(0,4) : [],
+        answerIndex: Number(answerIndex),
+        timeLimitSec: Number(timeLimitSec)
+      };
+    });
+    totalQuestionsCountEl.textContent = QUESTIONS.length;
+    numQInput.max = Math.max(QUESTIONS.length, 200);
+  } catch(e){
+    console.error('Failed to load questions.json', e);
+    alert('Could not load questions.json. Run a static server or place the file next to index.html.');
+  }
+}
+
+// shuffle utility
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+// Start test
+startBtn.addEventListener('click', () => {
+  const want = Math.max(5, Math.min(Number(numQInput.value) || 21, QUESTIONS.length || 200));
+  pool = shuffle(QUESTIONS).slice(0, want);
+  state.current = 0;
+  state.answers = [];
+  state.totalStart = performance.now();
+  startPanel.style.display = 'none';
+  testPanel.style.display = 'block';
+  endControls.hidden = true;
+  renderQuestion();
+  updateStats();
+  drawMiniChart(0, AVG_IQ, want);
+});
+
+// Render one question
+function renderQuestion(){
+  clearInterval(state.timerInterval);
+  const idx = state.current;
+  const total = pool.length;
+  if(idx >= total){
+    finishTest();
+    return;
+  }
+  const q = pool[idx];
+  qText.textContent = q.q;
+  timeLimitText.textContent = `Limit: ${q.timeLimitSec}s`;
+  qnIndicator.textContent = `${idx+1} / ${total}`;
+  // progress
+  const percent = (idx/total)*100;
+  progressFill.style.width = percent + '%';
+
+  // answers
+  answersWrap.innerHTML = '';
+  q.choices.forEach((c,i)=>{
+    const b = document.createElement('button');
+    b.className='answer-btn';
+    b.textContent = c;
+    b.setAttribute('data-index', String(i));
+    b.addEventListener('click', ()=> chooseAnswer(i));
+    answersWrap.appendChild(b);
+  });
+
+  // start per-question timer
+  state.qStart = performance.now();
+  state.remainingMs = q.timeLimitSec * 1000;
+  updateTimerFill();
+  state.timerInterval = setInterval(() => {
+    state.remainingMs = q.timeLimitSec*1000 - (performance.now() - state.qStart);
+    if(state.remainingMs <= 0){
+      chooseAnswer(null, true); // timed out
+    } else {
+      updateTimerFill();
+    }
+  }, 50);
+  updateTotalElapsed();
+}
+
+// update timer visuals
+function updateTimerFill(){
+  const q = pool[state.current];
+  const pct = Math.max(0, state.remainingMs / (q.timeLimitSec*1000));
+  timerFill.style.width = (pct*100) + '%';
+  // tone based on pct but monochrome (we use fill alpha)
+  const alpha = 0.15 + pct*0.85;
+  timerFill.style.background = `rgba(255,255,255,${alpha})`;
+  countdownText.textContent = `Time: ${(state.remainingMs/1000).toFixed(1)}s`;
+}
+
+// choose answer (pickedIndex null when skip or timeout)
+function chooseAnswer(pickedIndex, timedOut=false){
+  clearInterval(state.timerInterval);
+  const idx = state.current;
+  const q = pool[idx];
+  const elapsed = Math.min(q.timeLimitSec, (performance.now() - state.qStart)/1000);
+  const correctIndex = Number(q.answerIndex ?? 0);
+  const isCorrect = (pickedIndex !== null && pickedIndex === correctIndex) ? true : false;
+  state.answers.push({
+    questionIndex: idx,
+    qText: q.q,
+    pickedIndex: (pickedIndex === null ? null : Number(pickedIndex)),
+    correct: isCorrect,
+    timeSec: Number(elapsed.toFixed(3)),
+    timeLimitSec: q.timeLimitSec
+  });
+
+  // quick visual: mark buttons (brief)
+  if(pickedIndex !== null){
+    const btns = Array.from(answersWrap.children);
+    btns.forEach((b,i)=> {
+      if(i === pickedIndex){
+        b.style.boxShadow = isCorrect ? '0 6px 12px rgba(255,255,255,0.08)' : 'inset 0 0 0 2px rgba(255,255,255,0.06)';
+      } else if(i === correctIndex){
+        // show the correct one subtly
+        b.style.boxShadow = 'inset 0 0 0 2px rgba(255,255,255,0.03)';
+      }
+    });
+  }
+
+  // move next after small delay
+  setTimeout(()=>{
+    state.current++;
+    renderQuestion();
+    updateStats();
+  }, 180);
+}
+
+// skip
+skipBtn.addEventListener('click', ()=> chooseAnswer(null,false));
+
+// update stats live
+function updateStats(){
+  const total = pool.length || 0;
+  const correct = state.answers.reduce((s,a)=>s + (a.correct?1:0),0);
+  const wrong = state.answers.length - correct;
+  const avgTime = state.answers.length ? (state.answers.reduce((s,a)=>s+a.timeSec,0) / state.answers.length) : 0;
+  statCorrect.textContent = correct;
+  statWrong.textContent = wrong;
+  statTotal.textContent = total;
+  statAvgTime.textContent = avgTime ? `${avgTime.toFixed(2)}s` : '—';
+  // IQ mapping (toy)
+  const CR = (correct / (total||1));
+  const avgTimeLimit = pool.reduce((s,q)=>s+q.timeLimitSec,0) / (pool.length||1);
+  const speedFactor = avgTime ? Math.max(0, (avgTimeLimit - avgTime) / avgTimeLimit) : 0;
+  let iq = Math.round(100 + 15 * ((CR - 0.5) / 0.2));
+  iq += Math.round(6 * Math.min(1, speedFactor * SPEED_WEIGHT));
+  if(isNaN(iq)) iq = 100;
+  statIQ.textContent = iq;
+  drawMiniChart(iq, AVG_IQ, total);
+}
+
+// finish test
+function finishTest(){
+  clearInterval(state.timerInterval);
+  testPanel.style.display = 'none';
+  endControls.hidden = false;
+  const total = pool.length;
+  const correct = state.answers.reduce((s,a)=>s + (a.correct?1:0),0);
+  const wrong = total - correct;
+  const avgTime = state.answers.length ? (state.answers.reduce((s,a)=>s+a.timeSec,0) / state.answers.length) : 0;
+  // compute IQ again
+  const CR = (correct / (total||1));
+  const avgTimeLimit = pool.reduce((s,q)=>s+q.timeLimitSec,0) / (pool.length||1);
+  const speedFactor = avgTime ? Math.max(0, (avgTimeLimit - avgTime) / avgTimeLimit) : 0;
+  let iq = Math.round(100 + 15 * ((CR - 0.5) / 0.2));
+  iq += Math.round(6 * Math.min(1, speedFactor * SPEED_WEIGHT));
+  if(isNaN(iq)) iq = 100;
+
+  summaryText.innerHTML = `Correct: <strong>${correct}</strong> • Wrong/Skipped: <strong>${wrong}</strong> • Total: <strong>${total}</strong><br>Avg time/q: <strong>${avgTime.toFixed(2)}s</strong> • Estimated IQ: <strong>${iq}</strong>`;
+  updateStats();
+}
+
+// draw mini chart (monochrome)
+function drawMiniChart(userIQ, avgIQ, totalQ){
+  if(chartInstance) chartInstance.destroy();
+  const labels = ['You','Average'];
+  const data = {
+    labels,
+    datasets: [{
+      label:'IQ',
+      data:[userIQ || 0, avgIQ || AVG_IQ],
+      backgroundColor: [ 'rgba(255,255,255,0.95)', 'rgba(200,200,200,0.6)' ]
+    }]
+  };
+  chartInstance = new Chart(miniChartCtx, {
+    type:'bar',
+    data,
+    options:{
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{y:{beginAtZero:true, suggestedMax:160,
+        ticks:{color: 'white'},
+      }, x:{ticks:{color:'white'}}},
+      layout:{padding:8}
+    }
+  });
+}
+
+// build result canvas (black & white)
+function buildResultCanvas(){
+  const total = pool.length;
+  const correct = state.answers.reduce((s,a)=>s + (a.correct?1:0),0);
+  const wrong = total - correct;
+  const avgTime = state.answers.length ? (state.answers.reduce((s,a)=>s+a.timeSec,0) / state.answers.length) : 0;
+  const CR = (correct / (total||1));
+  const avgTimeLimit = pool.reduce((s,q)=>s+q.timeLimitSec,0) / (pool.length||1);
+  const speedFactor = avgTime ? Math.max(0, (avgTimeLimit - avgTime) / avgTimeLimit) : 0;
+  let iq = Math.round(100 + 15 * ((CR - 0.5) / 0.2));
+  iq += Math.round(6 * Math.min(1, speedFactor * SPEED_WEIGHT));
+  if(isNaN(iq)) iq = 100;
+
+  const cols = Math.min(20, total);
+  const rows = Math.ceil(total/cols);
+  const cell = 26;
+  const padding = 24;
+  const width = Math.max(520, padding*2 + cols*cell);
+  const height = padding*2 + 160 + rows*cell + 10;
+
+  const cv = document.createElement('canvas');
+  cv.width = width;
+  cv.height = height;
+  const ctx = cv.getContext('2d');
+
+  // background black
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0,0,width,height);
+
+  // header
+  ctx.fillStyle = '#fff';
+  ctx.font = '700 20px "Google Sans Code", monospace';
+  ctx.fillText('IQ Test — Summary', padding, 36);
+
+  ctx.font = '500 12px "Google Sans Code", monospace';
+  ctx.fillStyle = '#ddd';
+  ctx.fillText(`Total: ${total}    Correct: ${correct}    Wrong/Skipped: ${wrong}`, padding, 60);
+  ctx.fillText(`Avg time/q: ${avgTime.toFixed(2)}s    Estimated IQ: ${iq}    Avg IQ: ${AVG_IQ}`, padding, 80);
+
+  // IQ bar
+  const barX = padding;
+  const barY = 96;
+  const barW = width - padding*2;
+  const barH = 14;
+  ctx.fillStyle = 'rgba(255,255,255,0.07)';
+  roundRect(ctx, barX, barY, barW, barH, 6, true, false);
+  const maxIQShown = 160;
+  const userX = Math.min(maxIQShown, iq) / maxIQShown * barW;
+  const avgX = Math.min(maxIQShown, AVG_IQ) / maxIQShown * barW;
+  ctx.fillStyle = '#fff';
+  roundRect(ctx, barX, barY, userX, barH, 6, true, false);
+  ctx.fillStyle = '#bbb';
+  ctx.fillRect(barX + avgX - 1, barY - 4, 2, barH + 8);
+
+  ctx.fillStyle = '#fff';
+  ctx.font = '600 12px "Google Sans Code", monospace';
+  ctx.fillText(`You: ${iq}`, barX + Math.min(userX, barW-60), barY + barH + 22);
+  ctx.fillText(``, barX + avgX + 6, barY + barH + 22);
+
+  // per-question grid
+  const gridX = padding;
+  const gridY = barY + barH + 46;
+  ctx.font = '600 11px "Google Sans Code", monospace';
+  ctx.fillStyle = '#fff';
+  ctx.fillText('Per-question (✓ correct / ✗ wrong):', gridX, gridY - 8);
+
+  for(let i=0;i<total;i++){
+    const a = state.answers[i];
+    const col = i % cols;
+    const row = Math.floor(i/cols);
+    const cx = gridX + col*(cell);
+    const cy = gridY + row*(cell);
+    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+    roundRect(ctx, cx, cy, 22, 22, 4, true, false);
+    ctx.fillStyle = (a && a.correct) ? '#fff' : '#fff';
+    ctx.font = '700 14px "Google Sans Code", monospace';
+    // draw ticks or crosses in white (we'll use lighter/darker via alpha)
+    ctx.fillStyle = (a && a.correct) ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.5)';
+    ctx.fillText(a && a.correct ? '✓' : '✗', cx+6, cy+16);
+    // small number
+    ctx.fillStyle = 'rgba(255,255,255,0.35)';
+    ctx.font = '500 9px "Google Sans Code", monospace';
+    ctx.fillText(String(i+1), cx+2, cy+9);
+  }
+
+  // footer
+  ctx.font = '500 11px "Google Sans Code", monospace';
+  ctx.fillStyle = '#999';
+  ctx.fillText(`IQ tested at void.ac/iq`, padding, height - 12);
+
+  return cv;
+}
+
+// rounded rect
+function roundRect(ctx,x,y,w,h,r,fill,stroke){
+  if(typeof r === 'undefined') r=6;
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+  if(fill) ctx.fill();
+  if(stroke) ctx.stroke();
+}
+
+// downloads
+downloadImgBtn.addEventListener('click', ()=>{
+  const cv = buildResultCanvas();
+  const url = cv.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'iq_summary.png';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+});
+
+// copy to clipboard
+copyImgBtn.addEventListener('click', async ()=>{
+  try{
+    const cv = buildResultCanvas();
+    cv.toBlob(async (blob)=>{
+      await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]);
+      alert('Summary image copied.');
+    });
+  } catch (e){
+    console.error(e);
+    alert('Copy failed. Your browser may not support clipboard image write. Try download instead.');
+  }
+});
+
+restartBtn.addEventListener('click', ()=> location.reload());
+
+function updateTotalElapsed(){
+  // keep showing elapsed time
+  requestAnimationFrame(updateTotalElapsed);
+  const elapsed = ((performance.now() - state.totalStart)/1000) || 0;
+  document.getElementById('totalElapsed').textContent = `${Math.floor(elapsed)}s`;
+}
+
+// finish test wrapper
+function finishTest(){
+  // same as earlier finishTest name, keep both in-scope
+  finishTestOriginal();
+}
+
+// preserve finishTest name but avoid hoisting problems: implement original as finishTestOriginal
+function finishTestOriginal(){
+  clearInterval(state.timerInterval);
+  testPanel.style.display = 'none';
+  endControls.hidden = false;
+  const total = pool.length;
+  const correct = state.answers.reduce((s,a)=>s + (a.correct?1:0),0);
+  const wrong = total - correct;
+  const avgTime = state.answers.length ? (state.answers.reduce((s,a)=>s+a.timeSec,0) / state.answers.length) : 0;
+  const CR = (correct / (total||1));
+  const avgTimeLimit = pool.reduce((s,q)=>s+q.timeLimitSec,0) / (pool.length||1);
+  const speedFactor = avgTime ? Math.max(0, (avgTimeLimit - avgTime) / avgTimeLimit) : 0;
+  let iq = Math.round(100 + 15 * ((CR - 0.5) / 0.2));
+  iq += Math.round(6 * Math.min(1, speedFactor * SPEED_WEIGHT));
+  if(isNaN(iq)) iq = 100;
+
+  summaryText.innerHTML = `Correct: <strong>${correct}</strong> • Wrong/Skipped: <strong>${wrong}</strong> • Total: <strong>${total}</strong><br>Avg time/q: <strong>${avgTime.toFixed(2)}s</strong> • Estimated IQ: <strong>${iq}</strong>`;
+  updateStats();
+}
+
+// init
+loadQuestions();
+updateTotalElapsed();
+</script>
+</body>
+</html>
