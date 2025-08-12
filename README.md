@@ -1,16 +1,12 @@
 # 🧠 IQ Test
 
-Test your cognitive abilities and general knowledge with this interactive IQ quiz app.
+Test your cognitive abilities and general knowledge with this interactive IQ quiz app. No login and bs, simply open the app and start answering.
+
+
 
 - --
 
-[![Build Status](https://img.shields.io/badge/build-passing-brightgreen)](https://github.com/2xBuild/iq/actions)
-
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-
-- --
-
-no nonsense IQ test app.
+Link : iq.void.ac
 
 ## Usage
 
@@ -57,5 +53,4 @@ Contributions are what make the open-source community such an amazing place to l
 
 Distributed under the MIT License.
 
-- --
 
