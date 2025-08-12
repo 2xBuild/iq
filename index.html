@@ -33,6 +33,7 @@
     background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
     border:1px solid var(--card-border);
   }
+  a{color:var(--white);text-decoration:underline;transition:color 0.2s}
   .grid{display:grid;grid-template-columns:1fr 340px;gap:18px}
   header h1{margin:0;font-size:28px;color:var(--white);letter-spacing:0.6px}
   .lead{color:var(--muted);margin-top:6px;font-size:13px}
@@ -104,6 +105,8 @@
             <div class="small">Answers are scored for correctness first; faster correct answers slightly increase the estimate. This IQ score is a rough estimate for entertainment purposes only.</div>
 
             <button id="startBtn" class="btn" aria-pressed="false">Start Test</button>
+            <br><br>
+            <div class="small" style="margin-top:8px">Built by <a href="https://twitter.com/2xBuild">void</a> and proudly <a href="https://github.com/2xBuild/iq">open source.</a></div>
           </div>
 
           <!-- test panel (hidden until start) -->
