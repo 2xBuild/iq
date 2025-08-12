@@ -66,17 +66,6 @@
     "timeLimitSec": 12
   },
   {
-    "q": "If DOG = 26, and CAT = 24, then BAT = ? (A=1, B=2, ...)",
-    "choices": [
-      "23",
-      "21",
-      "20",
-      "25"
-    ],
-    "answerIndex": 0,
-    "timeLimitSec": 15
-  },
-  {
     "q": "Find the missing number: 1, 1, 2, 3, 5, 8, ?",
     "choices": [
       "11",
